@@ -28,10 +28,23 @@ public class Scene {
 	private int indexBuffer;
 	private Vector3f[] colours;
 	private int colourBuffer;
+	
+	private Matrix4f modelMatrix;
+	private Matrix4f translationMatrix;
+	private Matrix4f rotationMatrix;
+	private Matrix4f scaleMatrix;
+	private float oldTime;
 
 	private Shader shader;
 
 	public Scene() {
+		
+		modelMatrix = new Matrix4f();
+		translationMatrix = new Matrix4f();
+		rotationMatrix = new Matrix4f();
+		scaleMatrix = new Matrix4f();
+		
+		oldTime = System.nanoTime();
 
 		shader = ShaderLibrary.instance.compileShader(VERTEX_SHADER, FRAGMENT_SHADER);
 
@@ -77,7 +90,26 @@ public class Scene {
 			// @formatter:on
 
 		indexBuffer = GLBuffers.createIndexBuffer(indices);
+		
+//		rotationMatrix((float) (-Math.PI/2), rotationMatrix);
+		
+//		scaleMatrix(.5f ,.5f, scaleMatrix);
+//		translationMatrix(.5f, -.5f, translationMatrix);
+		
+//		rotationMatrix((float) (Math.PI/4), rotationMatrix);
+//		scaleMatrix(.5f, .5f, scaleMatrix);
+//		translationMatrix(0, 1f, translationMatrix);
+		
+		translationMatrix(0, -.5f, translationMatrix);
+		scaleMatrix(.2f, .2f, scaleMatrix);
+		rotationMatrix((float) (-Math.PI/2), rotationMatrix);
+		
+		
+		modelMatrix.mul(translationMatrix);
+		modelMatrix.mul(scaleMatrix);
+		modelMatrix.mul(rotationMatrix);
 
+		
 	}
 
 	public void draw() {
@@ -86,12 +118,29 @@ public class Scene {
 		// set the attributes
 		shader.setAttribute("a_position", vertexBuffer);
 		shader.setAttribute("a_colour", colourBuffer);
+		
+		shader.setUniform("u_modelMatrix", modelMatrix);
+		
+		float newTime = System.nanoTime();
+		
+		float deltaTime = newTime - oldTime;
+		
+		System.out.println("deltaTime: " + deltaTime);
+		
+		rotationMatrix((float) (2 * Math.PI/360/2), rotationMatrix);
+		translationMatrix(0, .05f/2, translationMatrix);
+		
+		modelMatrix.mul(rotationMatrix);
+		modelMatrix.mul(translationMatrix);
+		
+		
 
 		// draw using index buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+		oldTime = System.nanoTime();
 
 	}
 
@@ -133,9 +182,20 @@ public class Scene {
 	 */
 
 	public static Matrix4f rotationMatrix(float angle, Matrix4f dest) {
+		
+		dest.identity();
 
-		// TODO: Your code here
+            //	   [ cos(angle) -sin(angle) 0 0  ]
+			// T = [ sin(angle) cos(angle)  0 0  ]
+		    //     [ 0          0           0 0  ]
+			//     [ 0          0           0 1  ]
 
+		dest.m00((float) Math.cos(angle));
+		dest.m01((float) Math.sin(angle));
+		
+		dest.m10((float) -Math.sin(angle));
+		dest.m11((float) Math.cos(angle));
+		
 		return dest;
 	}
 
@@ -150,8 +210,16 @@ public class Scene {
 	 */
 
 	public static Matrix4f scaleMatrix(float sx, float sy, Matrix4f dest) {
+		
+		dest.identity();
 
-		// TODO: Your code here
+        //	   [ sx 0  0 0 ]
+		// T = [ 0  sy 0 0 ]
+	    //     [ 0  0  0 0 ]
+		//     [ 0  0  0 1 ]
+		
+		dest.m00(sx);
+		dest.m11(sy);
 
 		return dest;
 	}
