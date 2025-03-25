@@ -33,7 +33,7 @@ public class Scene {
 	private Matrix4f translationMatrix;
 	private Matrix4f rotationMatrix;
 	private Matrix4f scaleMatrix;
-	private float oldTime;
+	private long oldTime;
 
 	private Shader shader;
 
@@ -100,7 +100,7 @@ public class Scene {
 //		scaleMatrix(.5f, .5f, scaleMatrix);
 //		translationMatrix(0, 1f, translationMatrix);
 		
-		translationMatrix(0, -.5f, translationMatrix);
+		translationMatrix(0, -.75f, translationMatrix);
 		scaleMatrix(.2f, .2f, scaleMatrix);
 		rotationMatrix((float) (-Math.PI/2), rotationMatrix);
 		
@@ -121,14 +121,17 @@ public class Scene {
 		
 		shader.setUniform("u_modelMatrix", modelMatrix);
 		
-		float newTime = System.nanoTime();
+		long newTime = System.nanoTime();
 		
-		float deltaTime = newTime - oldTime;
 		
+		float deltaTime = (float) ((newTime - oldTime)/ Math.pow(10, 8));
+		
+		System.out.println("oldTime: " + oldTime);
+		System.out.println("newTime: " + newTime);
 		System.out.println("deltaTime: " + deltaTime);
 		
-		rotationMatrix((float) (2 * Math.PI/360/2), rotationMatrix);
-		translationMatrix(0, .05f/2, translationMatrix);
+		rotationMatrix((float) (Math.PI/12) * deltaTime, rotationMatrix);
+		translationMatrix(0, 1f * deltaTime, translationMatrix);
 		
 		modelMatrix.mul(rotationMatrix);
 		modelMatrix.mul(translationMatrix);
@@ -140,7 +143,7 @@ public class Scene {
 		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
-		oldTime = System.nanoTime();
+		oldTime = newTime;
 
 	}
 
